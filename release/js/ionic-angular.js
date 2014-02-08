@@ -2761,7 +2761,7 @@ angular.module('ionic.ui.viewState', ['ionic.service.view', 'ionic.service.gestu
       '</header>',
 
     compile: function(tElement, tAttrs) {
-      var backBtnEle = tElement.find('div').find('button');
+      var backBtnEle = angular.element( tElement[0].querySelector('.buttons button') );
       if(tAttrs.backButtonType) backBtnEle.addClass(tAttrs.backButtonType);
 
       if(tAttrs.backButtonIcon && tAttrs.backButtonLabel) {
