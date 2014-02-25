@@ -32,12 +32,35 @@ describe('Ionic Modal', function() {
     });
 
     timeout.flush();
-
-    waitsFor(function() {
-      return done;
-    }, "Modal should be loaded", 100);
-
+    expect(done).toBe(true);
   });
+
+  it('should set isShown on show/hide', function() {
+    var m = modal.fromTemplate('<div class="modal">hello</div>');
+    expect(m.isShown()).toBe(false);
+    m.show();
+    expect(m.isShown()).toBe(true);
+    m.hide();
+    expect(m.isShown()).toBe(false);
+  });
+
+  it('should set isShown on remove', function() {
+    var m = modal.fromTemplate('<div class="modal">hello</div>');
+    expect(m.isShown()).toBe(false);
+    m.show();
+    expect(m.isShown()).toBe(true);
+    m.remove();
+    expect(m.isShown()).toBe(false);
+  });
+
+  it('should animate leave and destroy scope on remove', inject(function($animate) {
+    var m = modal.fromTemplate('<div class="modal"></div>');
+    spyOn($animate, 'leave').andCallFake(function(el, cb) { cb(); });
+    spyOn(m.scope, '$destroy');
+    m.remove();
+    expect($animate.leave).toHaveBeenCalled();
+    expect(m.scope.$destroy).toHaveBeenCalled();
+  }));
 
   it('Should close on hardware back button', function() {
     var template = '<div class="modal"></div>';
@@ -54,4 +77,35 @@ describe('Ionic Modal', function() {
 
     expect(modalInstance.el.classList.contains('active')).toBe(false);
   });
+
+  it('should broadcast "modal.shown" on show', function() {
+    var template = '<div class="modal"></div>';
+    var m = modal.fromTemplate(template, {});
+    spyOn(m.scope.$parent, '$broadcast');
+    m.show();
+    expect(m.scope.$parent.$broadcast).toHaveBeenCalledWith('modal.shown', m);
+  });
+  it('should broadcast "modal.hidden" on hide', function() {
+    var template = '<div class="modal"></div>';
+    var m = modal.fromTemplate(template, {});
+    spyOn(m.scope.$parent, '$broadcast');
+    m.hide();
+    expect(m.scope.$parent.$broadcast).toHaveBeenCalledWith('modal.hidden', m);
+  });
+  it('should broadcast "modal.removed" on remove', inject(function($animate) {
+    var template = '<div class="modal"></div>';
+    var m = modal.fromTemplate(template, {});
+    var broadcastedModal;
+    var done = false;
+
+    //By the time m.remove() is done, our scope will be destroyed. so we have to save the modal
+    //it gives us
+    spyOn(m.scope.$parent, '$broadcast').andCallFake(function(e, modal) {
+      broadcastedModal = modal;
+    });
+    spyOn($animate, 'leave').andCallFake(function(el, cb) { cb(); });
+
+    m.remove();
+    expect(broadcastedModal).toBe(m);
+  }));
 });

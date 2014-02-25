@@ -1,12 +1,15 @@
 describe('$ionicScroll Controller', function() {
 
-  beforeEach(module('ionic.ui.scroll'));
+  beforeEach(module('ionic'));
 
   var scope, ctrl, timeout;
   function setup(options) {
     options = options || {};
 
-    options.el = options.el || document.createElement('div');
+    options.el = options.el ||
+      //scrollView requires an outer container element and a child
+      //content element
+      angular.element('<div><div></div></div>')[0];
 
     inject(function($controller, $rootScope, $timeout) {
       scope = $rootScope.$new();
@@ -41,6 +44,31 @@ describe('$ionicScroll Controller', function() {
     expect(ctrl.scrollView.run).toHaveBeenCalled();
   });
 
+  it('should resize the scrollview on window resize', function() {
+    setup();
+    timeout.flush();
+    spyOn(ctrl.scrollView, 'resize');
+    ionic.trigger('resize', { target: window });
+    expect(ctrl.scrollView.resize).toHaveBeenCalled();
+  });
+
+  it('should unbind window event listener on scope destroy', function() {
+    spyOn(window, 'removeEventListener');
+    spyOn(window, 'addEventListener');
+    setup();
+    expect(window.addEventListener).toHaveBeenCalled();
+    expect(window.addEventListener.mostRecentCall.args[0]).toBe('resize');
+    scope.$destroy();
+    expect(window.removeEventListener).toHaveBeenCalled();
+    expect(window.removeEventListener.mostRecentCall.args[0]).toBe('resize');
+  });
+
+  it('should register with $ionicScrollDelegate', inject(function($ionicScrollDelegate) {
+    spyOn($ionicScrollDelegate, 'register');
+    setup();
+    expect($ionicScrollDelegate.register).toHaveBeenCalledWith(scope, ctrl.$element, ctrl.scrollView);
+  }));
+
   it('should not setup if no child .scroll-refresher', function() {
     setup();
     timeout.flush();
@@ -70,7 +98,6 @@ describe('$ionicScroll Controller', function() {
     });
 
     scope.onRefresh = jasmine.createSpy('onRefresh');
-    scope.$parent.$broadcast = jasmine.createSpy('$broadcast');
 
     timeout.flush();
     var refresher = ctrl.refresher;
@@ -87,13 +114,11 @@ describe('$ionicScroll Controller', function() {
     expect(refresher.classList.contains('refreshing')).toBe(false);
 
     expect(scope.onRefresh).not.toHaveBeenCalled();
-    expect(scope.$parent.$broadcast).not.toHaveBeenCalledWith('scroll.onRefresh');
 
     doneCb();
     expect(refresher.classList.contains('active')).toBe(false);
     expect(refresher.classList.contains('refreshing')).toBe(true);
     expect(scope.onRefresh).toHaveBeenCalled();
-    expect(scope.$parent.$broadcast).toHaveBeenCalledWith('scroll.onRefresh');
   });
 
 });

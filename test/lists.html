@@ -13,12 +13,7 @@
         overflow: hidden;
       }
     </style>
-    <script src="../dist/js/ionic.js"></script>
-    <script src="../dist/js/angular/angular.js"></script>
-    <script src="../dist/js/angular/angular-sanitize.js"></script>
-    <script src="../dist/js/angular/angular-animate.js"></script>
-    <script src="../dist/js/angular-ui/angular-ui-router.js"></script>
-    <script src="../dist/js/ionic-angular.js"></script>
+    <script src="../dist/js/ionic.bundle.js"></script>
     <script>
       angular.module('ionicApp', ['ionic'])
     </script>
@@ -64,9 +59,23 @@
 
           <div class="item item-icon-left item-button-right">
             <i class="icon ion-chatbubble-working ion-primary"></i>
-            Call Ma
+            Left Icon and Right Button
             <button class="button button-positive">
               <i class="icon ion-ios7-telephone"></i>
+            </button>
+          </div>
+
+          <div class="item item-button-right">
+            Right Button
+            <button class="button button-positive">
+              <i class="icon ion-ios7-telephone"></i>
+            </button>
+          </div>
+
+          <div class="item item-button-right">
+            Right Button Text
+            <button class="button button-positive">
+              <i class="icon ion-ios7-telephone"></i> Text
             </button>
           </div>
 
@@ -575,9 +584,9 @@
         }
 
         return false;
-      }); 
+      });
 
-    
+
     </script>
 
   </body>

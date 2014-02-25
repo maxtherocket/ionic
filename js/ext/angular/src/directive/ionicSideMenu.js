@@ -60,9 +60,13 @@ angular.module('ionic.ui.sideMenu', ['ionic.service.gesture', 'ionic.service.vie
 
         $element.addClass('menu-content');
 
-        $scope.$watch(attr.dragContent, function(value) {
-          $scope.dragContent = value;
-        });
+        if (angular.isDefined(attr.dragContent)) {
+          $scope.$watch(attr.dragContent, function(value) {
+            $scope.dragContent = value;
+          });
+        } else {
+          $scope.dragContent = true;
+        }
 
         var defaultPrevented = false;
         var isDragging = false;

@@ -13,9 +13,40 @@ module.exports = function(grunt) {
         src: buildConfig.ionicFiles,
         dest: 'dist/js/ionic.js'
       },
-      distAngular: {
+      distangular: {
         src: buildConfig.angularIonicFiles,
         dest: 'dist/js/ionic-angular.js'
+      },
+      bundle: {
+        options: {
+          banner:
+            '/*!\n' +
+            ' * ionic.bundle.js is a concatenation of:\n' +
+            ' * ionic.js, angular.js, angular-animate.js,\n'+
+            ' * angular-ui-router.js, and ionic-angular.js\n'+
+            ' */\n\n'
+        },
+        src: [
+          'dist/js/ionic.js',
+          'config/lib/js/angular/angular.js',
+          'config/lib/js/angular/angular-animate.js',
+          'config/lib/js/angular-ui/angular-ui-router.js',
+          'dist/js/ionic-angular.js'
+        ],
+        dest: 'dist/js/ionic.bundle.js'
+      },
+      bundlemin: {
+        options: {
+          banner: '<%= concat.bundle.options.banner %>'
+        },
+        src: [
+          'dist/js/ionic.min.js',
+          'config/lib/js/angular/angular.min.js',
+          'config/lib/js/angular/angular-animate.min.js',
+          'config/lib/js/angular-ui/angular-ui-router.min.js',
+          'dist/js/ionic-angular.min.js'
+        ],
+        dest: 'dist/js/ionic.bundle.min.js'
       }
     },
 
@@ -43,12 +74,14 @@ module.exports = function(grunt) {
 
     'removelogging': {
       dist: {
-        files: {
-          'dist/js/ionic.js': 'dist/js/ionic.js',
-          'dist/js/ionic-angular.js': 'dist/js/ionic-angular.js'
-        },
+        files: [{
+          expand: true,
+          cwd: 'dist/js/',
+          src: ['*.js'],
+          dest: '.'
+        }],
         options: {
-          methods: 'log assert count clear group groupEnd groupCollapsed trace debug dir dirxml profile profileEnd time timeEnd timeStamp table exception'.split(' ')
+          methods: 'log info assert count clear group groupEnd groupCollapsed trace debug dir dirxml profile profileEnd time timeEnd timeStamp table exception'.split(' ')
         }
       }
     },
@@ -111,11 +144,8 @@ module.exports = function(grunt) {
       version: {
         files: {
           'dist/js/ionic.js': 'dist/js/ionic.js',
-          'dist/js/ionic.min.js': 'dist/js/ionic.min.js',
           'dist/js/ionic-angular.js': 'dist/js/ionic-angular.js',
-          'dist/js/ionic-angular.min.js': 'dist/js/ionic-angular.min.js',
           'dist/css/ionic.css': 'dist/css/ionic.css',
-          'dist/css/ionic.min.css': 'dist/css/ionic.min.css'
         },
         options: {
           replacements: [{
@@ -138,14 +168,14 @@ module.exports = function(grunt) {
     watch: {
       scripts: {
         files: ['js/**/*.js', 'ext/**/*.js'],
-        tasks: ['concat', 'string-replace'],
+        tasks: ['concat:dist', 'concat:distangular', 'concat:bundle'],
         options: {
           spawn: false
         }
       },
       sass: {
         files: ['scss/**/*.scss'],
-        tasks: ['sass', 'concat', 'string-replace'],
+        tasks: ['sass'],
         options: {
           spawn: false
         }
@@ -165,12 +195,14 @@ module.exports = function(grunt) {
   grunt.registerTask('build', [
     'sass',
     'cssmin',
-    'concat',
+    'concat:dist',
+    'concat:distangular',
     'copy',
-    'uglify',
     'string-replace',
+    'uglify',
     'version',
-    'removelogging'
+    'concat:bundle',
+    'concat:bundlemin'
   ]);
 
   grunt.registerMultiTask('karma', 'Run karma', function() {

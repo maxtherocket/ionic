@@ -67,7 +67,7 @@ angular.module('ionic.ui.viewState', ['ionic.service.view', 'ionic.service.gestu
       backButtonIcon: '@',
       alignTitle: '@'
     },
-    template: '<header class="bar bar-header nav-bar invisible">' +
+    template: '<header class="bar bar-header nav-bar {{type}} {{isInvisible ? \'invisible\' : \'\'}}">' +
         '<div class="buttons"> ' +
           '<button view-back class="back-button button hide" ng-if="enableBackButton"></button>' +
           '<button ng-click="button.tap($event)" ng-repeat="button in leftButtons" class="button no-animation {{button.type}}" bind-html-unsafe="button.content"></button>' +
@@ -92,19 +92,19 @@ angular.module('ionic.ui.viewState', ['ionic.service.view', 'ionic.service.gestu
         }
       }
 
-      if(tAttrs.type) tElement.addClass(tAttrs.type);
-
       return function link($scope, $element, $attr) {
-        var canHaveBackButton = !(!tAttrs.backButtonType && !tAttrs.backButtonLabel);
+        var canHaveBackButton = !(!tAttrs.backButtonType && !tAttrs.backButtonLabel && !tAttrs.backButtonIcon);
         $scope.enableBackButton = canHaveBackButton;
 
+        $scope.isInvisible = true;
         $rootScope.$on('viewState.showNavBar', function(e, showNavBar) {
-          if(showNavBar === false) {
-            $element[0].classList.add('invisible');
-          } else {
-            $element[0].classList.remove('invisible');
-          }
+          $scope.isInvisible = !showNavBar;
         });
+
+        function setBarType(value, oldValue) {
+          if (oldValue) $element.removeClass(oldValue);
+          $element.addClass(value);
+        }
 
         // Initialize our header bar view which will handle resizing and aligning our title labels
         var hb = new ionic.views.HeaderBar({

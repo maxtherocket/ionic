@@ -14,11 +14,14 @@ angular.module('ionic.ui.service.scrollDelegate', [])
     scrollBottom: function(animate) {
       $rootScope.$broadcast('scroll.scrollBottom', animate);
     },
+    scrollTo: function(left, top, animate) {
+      $rootScope.$broadcast('scroll.scrollTo', left, top, animate);
+    },
     resize: function() {
       $rootScope.$broadcast('scroll.resize');
     },
-    anchorScroll: function() {
-      $rootScope.$broadcast('scroll.anchorScroll');
+    anchorScroll: function(animate) {
+      $rootScope.$broadcast('scroll.anchorScroll', animate);
     },
     tapScrollToTop: function(element) {
       var _this = this;
@@ -45,18 +48,14 @@ angular.module('ionic.ui.service.scrollDelegate', [])
     getScrollView: function($scope) {
       return $scope.scrollView;
     },
+
     /**
-     * Register a scope for scroll event handling.
+     * Register a scope and scroll view for scroll event handling.
      * $scope {Scope} the scope to register and listen for events
      */
-    register: function($scope, $element) {
-      //Get scroll controller from parent
-      var scrollCtrl = $element.controller('$ionicScroll');
-      if (!scrollCtrl) {
-        return;
-      }
-      var scrollView = scrollCtrl.scrollView;
-      var scrollEl = scrollCtrl.element;
+    register: function($scope, $element, scrollView) {
+
+      var scrollEl = $element[0];
 
       function scrollViewResize() {
         // Run the resize after this digest
@@ -80,26 +79,27 @@ angular.module('ionic.ui.service.scrollDelegate', [])
         scrollView.finishPullToRefresh();
       });
 
-      $scope.$parent.$on('scroll.anchorScroll', function() {
-        var hash = $location.hash();
-        var elm;
-        //If there are multiple with this id, go to first one
-        if (hash && (elm = scrollEl.querySelectorAll('#' + hash)[0])) {
-          var scroll = ionic.DomUtil.getPositionInParent(elm, scrollEl);
-          scrollView.scrollTo(scroll.left, scroll.top);
-        } else {
-          scrollView.scrollTo(0,0);
-        }
+      $scope.$parent.$on('scroll.anchorScroll', function(e, animate) {
+        scrollViewResize().then(function() {
+          var hash = $location.hash();
+          var elm;
+          if (hash && (elm = document.getElementById(hash)) ) {
+            var scroll = ionic.DomUtil.getPositionInParent(elm, scrollEl);
+            scrollView.scrollTo(scroll.left, scroll.top, !!animate);
+          } else {
+            scrollView.scrollTo(0,0, !!animate);
+          }
+        });
       });
 
-      /**
-       * Called to scroll to the top of the content
-       *
-       * @param animate {boolean} whether to animate or just snap
-       */
+      $scope.$parent.$on('scroll.scrollTo', function(e, left, top, animate) {
+        scrollViewResize().then(function() {
+          scrollView.scrollTo(left, top, !!animate);
+        });
+      });
       $scope.$parent.$on('scroll.scrollTop', function(e, animate) {
         scrollViewResize().then(function() {
-          scrollView.scrollTo(0, 0, animate === false ? false : true);
+          scrollView.scrollTo(0, 0, !!animate);
         });
       });
       $scope.$parent.$on('scroll.scrollBottom', function(e, animate) {
@@ -107,7 +107,7 @@ angular.module('ionic.ui.service.scrollDelegate', [])
           var sv = scrollView;
           if (sv) {
             var max = sv.getScrollMax();
-            sv.scrollTo(0, max.top, animate === false ? false : true);
+            sv.scrollTo(max.left, max.top, !!animate);
           }
         });
       });
